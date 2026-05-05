@@ -1,0 +1,56 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 5s
+
+  # Copies the trace_id from the OTel log record into a Loki label so that Grafana
+  # can render a clickable "Tempo" button next to each log line. Only set on records
+  # that carry a real trace (non-zero trace_id); startup and shutdown logs are excluded.
+  transform/logs:
+    log_statements:
+      - context: log
+        statements:
+          - set(attributes["trace_id"], trace_id.string) where trace_id.string != "00000000000000000000000000000000"
+          - set(attributes["loki.attribute.labels"], "trace_id") where attributes["trace_id"] != nil
+
+exporters:
+  # Spans travel from the app to the collector over OTLP HTTP, then get forwarded
+  # to Tempo over OTLP gRPC. The insecure flag skips TLS since both run on the same Docker network.
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+
+  # Metrics are pushed to Prometheus via its remote write API.
+  # The --web.enable-remote-write-receiver flag on the Prometheus container is what enables this endpoint.
+  prometheusremotewrite:
+    endpoint: http://prometheus:9090/api/v1/write
+    tls:
+      insecure_skip_verify: true
+
+  # Logs are forwarded to Loki's push API. The collector automatically derives a job label
+  # from the service.name resource attribute, which is how the dashboard query {job="ticket-router"} works.
+  loki:
+    endpoint: http://loki:3100/loki/api/v1/push
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp/tempo]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheusremotewrite]
+    logs:
+      receivers: [otlp]
+      processors: [transform/logs, batch]
+      exporters: [loki]

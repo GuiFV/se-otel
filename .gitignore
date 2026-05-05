@@ -31,4 +31,4 @@ htmlcov/
 .mypy_cache/
 
 z-refs/
-
+.claude

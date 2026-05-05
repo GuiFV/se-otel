@@ -10,16 +10,6 @@ processors:
   batch:
     timeout: 5s
 
-  # Copies the trace_id from the OTel log record into a Loki label so that Grafana
-  # can render a clickable "Tempo" button next to each log line. Only set on records
-  # that carry a real trace (non-zero trace_id); startup and shutdown logs are excluded.
-  transform/logs:
-    log_statements:
-      - context: log
-        statements:
-          - set(attributes["trace_id"], trace_id.string) where trace_id.string != "00000000000000000000000000000000"
-          - set(attributes["loki.attribute.labels"], "trace_id") where attributes["trace_id"] != nil
-
 exporters:
   # Spans travel from the app to the collector over OTLP HTTP, then get forwarded
   # to Tempo over OTLP gRPC. The insecure flag skips TLS since both run on the same Docker network.
@@ -52,5 +42,5 @@ service:
       exporters: [prometheusremotewrite]
     logs:
       receivers: [otlp]
-      processors: [transform/logs, batch]
+      processors: [batch]
       exporters: [loki]

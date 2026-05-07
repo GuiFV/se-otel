@@ -12,7 +12,6 @@ log = logging.getLogger(f"app.{__name__}")
 tracer = trace.get_tracer(__name__)
 
 # Setting this to True during a demo simulates a congested routing queue.
-# Any urgent ticket will be held for 3 seconds, producing a visibly fat route span in Tempo.
 SIMULATE_QUEUE_SATURATION = False
 
 _ROUTING_TABLE: dict[tuple[str, str], str] = {

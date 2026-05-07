@@ -28,7 +28,7 @@ pip install -r requirements.txt
 ## Run tests
 
 ```bash
-pytest tests/
+python -m pytest
 ```
 
 ## Run the stack

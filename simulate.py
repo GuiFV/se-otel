@@ -41,7 +41,7 @@ TICKETS = [
         "body": "The invoice I received doesn't match the agreed price. The fee seems higher than expected.",
         "email": "frank@example.com",
     },
-    # Bad payloads: these trigger validation errors so the error rate panel shows something.
+    # error payloads
     {"subject": "", "body": "", "email": "not-an-email"},
     {"subject": "", "body": "Missing subject", "email": "nosubject@example.com"},
     {"subject": "Missing email", "body": "No email provided in this request", "email": ""},

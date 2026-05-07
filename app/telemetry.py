@@ -23,34 +23,29 @@ _ENDPOINT = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4318")
 
 
 def setup_telemetry(service_name: str = "ticket-router") -> None:
-    # A Resource describes the process producing the signals: every trace, metric, and log
-    # will carry this service.name so that Tempo, Prometheus, and Loki can each filter to just this service.
     resource = Resource.create({"service.name": service_name})
 
-    # Wire up the trace pipeline. The BatchSpanProcessor collects finished spans
-    # and ships them in batches to the OTel Collector over OTLP HTTP.
+    # Wire up the trace pipeline.
     tracer_provider = TracerProvider(resource=resource)
     tracer_provider.add_span_processor(
         BatchSpanProcessor(OTLPSpanExporter(endpoint=f"{_ENDPOINT}/v1/traces"))
     )
     trace.set_tracer_provider(tracer_provider)
 
-    # Wire up the metrics pipeline. The reader pushes fresh measurements every 5 seconds so that Grafana's rate()
-    # panels have enough samples to draw a meaningful line.
+    # Wire up the metrics pipeline.
     reader = PeriodicExportingMetricReader(
         OTLPMetricExporter(endpoint=f"{_ENDPOINT}/v1/metrics"),
         export_interval_millis=5000,
     )
     metrics.set_meter_provider(MeterProvider(resource=resource, metric_readers=[reader]))
 
-    # Wire up the log pipeline. LoggingHandler bridges Python's standard logging into OTel so every log.info/warning/error call gets sent to the collector as a structured log record.
+    # Wire up the log pipeline.
     logger_provider = LoggerProvider(resource=resource)
     logger_provider.add_log_record_processor(
         BatchLogRecordProcessor(OTLPLogExporter(endpoint=f"{_ENDPOINT}/v1/logs"))
     )
     set_logger_provider(logger_provider)
-    # Scoped to "app" so only our code ships logs to Loki. Attaching to root would
-    # also capture uvicorn, FastAPI internals, and the OTel SDK itself.
+    # Scoped to "app" so only our code ships logs to Loki.
     app_logger = logging.getLogger("app")
     app_logger.setLevel(logging.INFO)
     app_logger.addHandler(LoggingHandler(logger_provider=logger_provider))

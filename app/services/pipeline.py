@@ -38,8 +38,7 @@ def _acknowledge(ticket: Ticket) -> None:
 
 
 def process(subject: str, body: str, email: str) -> Ticket:
-    # ticket.ingest is the root span for the entire pipeline. Every sub-step opens its own
-    # child span and they all appear nested under this one as a waterfall in Tempo.
+    # ticket.ingest is the root span for the entire pipeline. Every sub-step appear nested under this one as a waterfall in Tempo.
     with tracer.start_as_current_span("ticket.ingest") as span:
         _validate(subject, body, email)
 

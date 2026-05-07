@@ -11,22 +11,16 @@ processors:
     timeout: 5s
 
 exporters:
-  # Spans travel from the app to the collector over OTLP HTTP, then get forwarded
-  # to Tempo over OTLP gRPC. The insecure flag skips TLS since both run on the same Docker network.
   otlp/tempo:
     endpoint: tempo:4317
     tls:
       insecure: true
 
-  # Metrics are pushed to Prometheus via its remote write API.
-  # The --web.enable-remote-write-receiver flag on the Prometheus container is what enables this endpoint.
   prometheusremotewrite:
     endpoint: http://prometheus:9090/api/v1/write
     tls:
       insecure_skip_verify: true
 
-  # Logs are forwarded to Loki's push API. The collector automatically derives a job label
-  # from the service.name resource attribute, which is how the dashboard query {job="ticket-router"} works.
   loki:
     endpoint: http://loki:3100/loki/api/v1/push
 

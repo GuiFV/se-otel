@@ -12,7 +12,7 @@ log = logging.getLogger(f"app.{__name__}")
 tracer = trace.get_tracer(__name__)
 
 # Setting this to True during a demo simulates a congested routing queue.
-SIMULATE_QUEUE_SATURATION = False
+SIMULATE_QUEUE_SATURATION = True
 
 _ROUTING_TABLE: dict[tuple[str, str], str] = {
     ("billing", "low"): "billing_team",
@@ -36,8 +36,8 @@ _ROUTING_TABLE: dict[tuple[str, str], str] = {
 
 def route(category: str, priority: str) -> str:
     with tracer.start_as_current_span("route"):
-        if SIMULATE_QUEUE_SATURATION and priority == "urgent":
-            log.warning("Routing queue saturated. Holding urgent ticket.")
+        if SIMULATE_QUEUE_SATURATION and priority != "urgent":
+            log.warning("Routing queue saturated. Holding ticket.")
             time.sleep(3)
 
         team = _ROUTING_TABLE.get((category, priority), "support_l1")

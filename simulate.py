@@ -53,7 +53,7 @@ random.shuffle(TICKETS)
 print(f"Sending {len(TICKETS)} tickets to {BASE_URL}\n")
 
 for i, payload in enumerate(TICKETS, start=1):
-    time.sleep(random.uniform(3.2, 7.4))
+    time.sleep(random.uniform(1.2, 2.6))
     try:
         resp = requests.post(f"{BASE_URL}/tickets", json=payload, timeout=10)
         if resp.status_code == 201:
